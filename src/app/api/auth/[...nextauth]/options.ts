@@ -10,20 +10,17 @@ export const authOptions: NextAuthOptions = {
       id: 'credentials',
       name: 'Credentials',
       credentials: {
-        email: { label: 'Email', type: 'text' },
+        username: { label: 'Username', type: 'text' },
         password: { label: 'Password', type: 'password' },
       },
       async authorize(credentials: any): Promise<any> {
         await dbConnect();
         try {
           const user = await UserModel.findOne({
-            $or: [
-              { email: credentials.identifier },
-              { username: credentials.identifier },
-            ],
+            username: credentials.username.toLowerCase(),
           });
           if (!user) {
-            throw new Error('No user found with this email');
+            throw new Error('No user found with this username');
           }
           if (!user.isVerified) {
             throw new Error('Please verify your account before logging in');
@@ -38,7 +35,7 @@ export const authOptions: NextAuthOptions = {
             throw new Error('Incorrect password');
           }
         } catch (err: any) {
-          throw new Error(err);
+          throw new Error(err.message || 'Authentication failed');
         }
       },
     }),
