@@ -40,21 +40,23 @@ function UserDashboard() {
     setIsSwitchLoading(true);
     try {
       const response = await axios.get<ApiResponse>('/api/accept-messages');
-      setValue('acceptMessages', response.data.isAcceptingMessages);
+      const isAcceptingMessages = response.data.isAcceptingMessages;
+  
+      // Update react-hook-form state
+      setValue('acceptMessages', isAcceptingMessages);
     } catch (error) {
       const axiosError = error as AxiosError<ApiResponse>;
       toast({
         title: 'Error',
         description:
-          axiosError.response?.data.message ??
-          'Failed to fetch message settings',
+          axiosError.response?.data.message ?? 'Failed to fetch message settings',
         variant: 'destructive',
       });
     } finally {
       setIsSwitchLoading(false);
     }
   }, [setValue, toast]);
-
+  
   const fetchMessages = useCallback(
     async (refresh: boolean = false) => {
       setIsLoading(true);
@@ -151,12 +153,15 @@ function UserDashboard() {
       </div>
 
       <div className="mb-4">
-        <Switch
-          {...register('acceptMessages')}
-          checked={acceptMessages}
-          onCheckedChange={handleSwitchChange}
-          disabled={isSwitchLoading}
-        />
+      <Switch
+  {...register('acceptMessages')}
+  checked={!!acceptMessages} // Ensure boolean value
+  onCheckedChange={async () => {
+    await handleSwitchChange();
+  }}
+  disabled={isSwitchLoading}
+/>
+
         <span className="ml-2">
           Accept Messages: {acceptMessages ? 'On' : 'Off'}
         </span>

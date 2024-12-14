@@ -3,6 +3,7 @@ import CredentialsProvider from 'next-auth/providers/credentials';
 import bcrypt from 'bcryptjs';
 import dbConnect from '@/lib/dbConnect';
 import UserModel from '@/models/User';
+import { User } from 'next-auth';
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -13,11 +14,19 @@ export const authOptions: NextAuthOptions = {
         username: { label: 'Username', type: 'text' },
         password: { label: 'Password', type: 'password' },
       },
-      async authorize(credentials: any): Promise<any> {
+      async authorize(
+        credentials: Record<"username" | "password", string> | undefined
+      ): Promise<User | null> {
+        if (!credentials) {
+          throw new Error('Missing credentials');
+        }
+
+        const { username, password } = credentials;
+
         await dbConnect();
         try {
           const user = await UserModel.findOne({
-            username: credentials.username.toLowerCase(),
+            username: username.toLowerCase(),
           });
           if (!user) {
             throw new Error('No user found with this username');
@@ -25,17 +34,17 @@ export const authOptions: NextAuthOptions = {
           if (!user.isVerified) {
             throw new Error('Please verify your account before logging in');
           }
-          const isPasswordCorrect = await bcrypt.compare(
-            credentials.password,
-            user.password
-          );
+          const isPasswordCorrect = await bcrypt.compare(password, user.password);
           if (isPasswordCorrect) {
             return user;
           } else {
             throw new Error('Incorrect password');
           }
-        } catch (err: any) {
-          throw new Error(err.message || 'Authentication failed');
+        } catch (error) {
+          if (error instanceof Error) {
+            throw new Error(error.message);
+          }
+          throw new Error('Authentication failed');
         }
       },
     }),
