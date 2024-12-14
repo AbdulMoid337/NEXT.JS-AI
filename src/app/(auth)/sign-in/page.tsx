@@ -58,7 +58,7 @@ export default function SignInForm() {
       if (result?.ok) {
         router.replace('/dashboard');
       }
-    } catch (error) {
+    } catch {
       toast({
         title: 'Error',
         description: 'An unexpected error occurred',
