@@ -3,7 +3,12 @@ import CredentialsProvider from 'next-auth/providers/credentials';
 import bcrypt from 'bcryptjs';
 import dbConnect from '@/lib/dbConnect';
 import UserModel from '@/models/User';
-import { User } from 'next-auth';
+import { User as NextAuthUser } from 'next-auth';
+
+// Extend the User type to include password
+interface User extends NextAuthUser {
+  password: string; // Add password property
+}
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -27,14 +32,14 @@ export const authOptions: NextAuthOptions = {
         try {
           const user = await UserModel.findOne({
             username: username.toLowerCase(),
-          });
+          }) as User;
           if (!user) {
             throw new Error('No user found with this username');
           }
           if (!user.isVerified) {
             throw new Error('Please verify your account before logging in');
           }
-          const isPasswordCorrect = await bcrypt.compare(password, user.password);
+          const isPasswordCorrect = await bcrypt.compare(password, (user as User).password);
           if (isPasswordCorrect) {
             return user;
           } else {
