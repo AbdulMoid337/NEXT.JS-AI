@@ -1,6 +1,5 @@
 import { Configuration, OpenAIApi } from 'openai';
 import { NextResponse } from 'next/server';
-import { ReadableStream } from 'web-streams-polyfill/ponyfill';
 
 // Configure OpenAI client
 const configuration = new Configuration({
